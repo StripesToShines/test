@@ -42,15 +42,19 @@
             right: 20px;
             padding: 1rem;
             border-radius: 0.5rem;
-            color: var(--theme-white); /* Default text color for message box */
+            color: var(--theme-white); 
             z-index: 1050; 
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
             max-width: 300px;
         }
-        .message-box.error { /* Specifically for error messages */
+        .message-box.error { 
             background-color: #dc3545; /* Red */
             color: var(--theme-white);
+        }
+        .message-box.success { 
+             background-color: var(--theme-yellow);
+             color: var(--theme-black);
         }
         .message-box.show {
             opacity: 1;
@@ -103,7 +107,6 @@
             background-color: #FFC700; 
         }
 
-
         /* Customizing Tailwind colors */
         .bg-theme-yellow { background-color: var(--theme-yellow); }
         .text-theme-yellow { color: var(--theme-yellow); }
@@ -114,7 +117,6 @@
         .text-theme-light-gray { color: var(--theme-light-gray); }
         .bg-theme-white { background-color: var(--theme-white); }
         .text-theme-black { color: var(--theme-black); }
-
 
         /* Input field styling for dark theme */
         .form-input-dark {
@@ -140,6 +142,14 @@
         .form-select-dark:focus {
             --tw-ring-color: var(--theme-yellow);
             border-color: var(--theme-yellow);
+        }
+         /* Honeypot field - visually hidden but accessible to screen readers if they stumble upon it */
+        .netlify-honeypot-field {
+            position: absolute;
+            left: -5000px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
         }
     </style>
 </head>
@@ -228,7 +238,16 @@
     <section id="quote" class="py-16 md:py-24 bg-theme-black fade-in-section">
         <div class="container mx-auto px-6">
             <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-theme-yellow">Request a Free Quote</h2>
-            <form id="quoteForm" class="max-w-xl mx-auto bg-theme-dark-gray p-8 rounded-lg shadow-xl">
+            <form id="quoteForm" 
+                  name="quote-request" method="POST" 
+                  data-netlify="true" 
+                  data-netlify-honeypot="bot-field" class="max-w-xl mx-auto bg-theme-dark-gray p-8 rounded-lg shadow-xl">
+                
+                <input type="hidden" name="form-name" value="quote-request" />
+                <p class="netlify-honeypot-field">
+                    <label>Don’t fill this out if you’re human: <input name="bot-field" /></label>
+                </p>
+                
                 <div class="mb-6">
                     <label for="name" class="block text-gray-300 text-sm font-bold mb-2">Full Name:</label>
                     <input type="text" id="name" name="name" required
@@ -237,30 +256,30 @@
                 </div>
                 <div class="mb-6">
                     <label for="email_quote" class="block text-gray-300 text-sm font-bold mb-2">Email Address:</label>
-                    <input type="email" id="email_quote" name="email_quote" required
+                    <input type="email" id="email_quote" name="email" required 
                            class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 form-input-dark"
                            placeholder="john.doe@example.com">
                 </div>
                 <div class="mb-6">
                     <label for="phone_quote" class="block text-gray-300 text-sm font-bold mb-2">Phone Number (Optional):</label>
-                    <input type="tel" id="phone_quote" name="phone_quote"
+                    <input type="tel" id="phone_quote" name="phone" 
                            class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 form-input-dark"
                            placeholder="(123) 456-7890">
                 </div>
                 <div class="mb-6">
                     <label for="service_type" class="block text-gray-300 text-sm font-bold mb-2">Service Interested In:</label>
-                    <select id="service_type" name="service_type" required
+                    <select id="service_type" name="service" required 
                             class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 form-select-dark appearance-none focus:ring-theme-yellow">
                         <option value="">Select a service</option>
                         <option value="New Layout Striping">New Layout Striping</option>
-                        <option value="Re-Striping">Re-Striping & Maintenance</option>
-                        <option value="Custom Stencils">Custom Stencils & Markings</option>
+                        <option value="Re-Striping & Maintenance">Re-Striping & Maintenance</option>
+                        <option value="Custom Stencils & Markings">Custom Stencils & Markings</option>
                         <option value="Other">Other</option>
                     </select>
                 </div>
                 <div class="mb-6">
                     <label for="message_quote" class="block text-gray-300 text-sm font-bold mb-2">Project Details / Message:</label>
-                    <textarea id="message_quote" name="message_quote" rows="5" required
+                    <textarea id="message_quote" name="message" rows="5" required 
                               class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 form-input-dark"
                               placeholder="Please describe your project or inquiry (e.g., number of parking spaces, type of surface)."></textarea>
                 </div>
@@ -314,81 +333,82 @@
     </div>
 
     <script>
-        // JavaScript for dynamic year in footer
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-        // DOM Elements
         const quoteForm = document.getElementById('quoteForm');
-        const messageBox = document.getElementById('messageBox'); // For errors
+        const messageBox = document.getElementById('messageBox'); 
         const thankYouModal = document.getElementById('thankYouModal');
         const closeModalButton = document.getElementById('closeModalButton');
 
-        // Function to show error messages (top-right notification)
-        function showErrorMessage(message) {
+        function showMessage(message, type = 'error') {
             messageBox.textContent = message;
-            messageBox.className = 'message-box error show'; // Ensure 'error' class is applied
+            messageBox.className = `message-box ${type} show`;
             setTimeout(() => {
                 messageBox.classList.remove('show');
             }, 4000);
         }
 
-        // Function to show the Thank You modal
         function showThankYouModal() {
             if (thankYouModal) {
                 thankYouModal.classList.add('show');
             }
         }
 
-        // Function to hide the Thank You modal
         function hideThankYouModal() {
             if (thankYouModal) {
                 thankYouModal.classList.remove('show');
             }
         }
 
-        // Event listener for quote form submission
         if (quoteForm) {
             quoteForm.addEventListener('submit', function(event) {
-                event.preventDefault();
+                event.preventDefault(); // Prevent default HTML form submission to handle it with AJAX
 
-                const name = document.getElementById('name').value;
-                const email = document.getElementById('email_quote').value;
-                const phone = document.getElementById('phone_quote').value;
-                const service = document.getElementById('service_type').value;
-                const message = document.getElementById('message_quote').value;
+                const nameInput = document.getElementById('name');
+                const emailInput = document.getElementById('email_quote');
+                const serviceInput = document.getElementById('service_type');
+                const messageInput = document.getElementById('message_quote');
 
-                if (!name || !email || !service || !message) {
-                    showErrorMessage('Please fill in all required fields.');
+                if (!nameInput.value || !emailInput.value || !serviceInput.value || !messageInput.value) {
+                    showMessage('Please fill in all required fields.', 'error');
                     return;
                 }
 
-                const recipientEmail = 'serge.zadorozhny@stripestoshines.com';
-                const subject = `Quote Request from ${name} - ${service} (Stripes to Shines)`;
-                let body = `Hello Stripes to Shines,\n\nI would like to request a quote with the following details:\n`;
-                body += `\nName: ${name}`;
-                body += `\nEmail: ${email}`;
-                if (phone) {
-                    body += `\nPhone: ${phone}`;
-                }
-                body += `\nService Interested In: ${service}`;
-                body += `\n\nMessage:\n${message}`;
+                const formData = new FormData(quoteForm);
+                const submitButton = quoteForm.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.textContent = 'Sending...';
 
-                const mailtoLink = `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                // For Netlify AJAX submission, we need to send data as x-www-form-urlencoded
+                const body = new URLSearchParams(formData).toString();
 
-                try {
-                    // This will attempt to open the user's default email client
-                    window.location.href = mailtoLink; 
-                    
-                    quoteForm.reset(); // Reset form fields
-                    showThankYouModal(); // Show the thank you modal
-                } catch (e) {
-                    console.error("Error opening mailto link:", e);
-                    showErrorMessage('Could not open email client. Please copy the details or contact us directly.');
-                }
+                fetch("/", { // Netlify forms are typically submitted to the root path or the page path
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: body
+                })
+                .then(response => {
+                    if (response.ok) {
+                        quoteForm.reset();
+                        showThankYouModal();
+                    } else {
+                        // Handle server errors from Netlify if any (though usually it's a success or nothing)
+                        response.text().then(text => {
+                             showMessage('Oops! There was a problem submitting your form. Please try again. ' + text, 'error');
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Form submission error:', error);
+                    showMessage('An unexpected error occurred. Please try again later.', 'error');
+                })
+                .finally(() => {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Send Quote Request';
+                });
             });
         }
 
-        // Event listener for closing the modal
         if (closeModalButton) {
             closeModalButton.addEventListener('click', hideThankYouModal);
         }
@@ -401,8 +421,6 @@
             });
         }
 
-
-        // Intersection Observer for fade-in sections
         const sections = document.querySelectorAll('.fade-in-section');
         const options = {
             root: null,
@@ -423,7 +441,6 @@
             sections[0].classList.add('is-visible');
         }
 
-        // Fallback for logo and Mobile Menu Toggle
         document.addEventListener('DOMContentLoaded', () => {
             const logoImg = document.querySelector('img[alt="Stripes to Shines Logo"]');
             if (logoImg) {
