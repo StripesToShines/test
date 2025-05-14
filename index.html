@@ -16,6 +16,8 @@
             --theme-dark-gray: #1F2937; /* Slightly lighter dark gray for elements */
             --theme-light-gray: #D1D5DB; /* For text on dark backgrounds */
             --theme-white: #FFFFFF;
+            --theme-error-red: #C8102E; /* Fire Lane Red (approx. Pantone 186C) */
+            --theme-warning-yellow: #FFD700; /* Using theme yellow for info/warning messages */
         }
 
         body {
@@ -35,7 +37,7 @@
             opacity: 1;
             transform: translateY(0);
         }
-        /* Styles for the error message box (top-right notification) */
+        /* Styles for the message box (top-right notification) */
         .message-box {
             position: fixed;
             top: 20px;
@@ -46,15 +48,15 @@
             z-index: 1050; 
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
-            max-width: 300px;
+            max-width: 350px; /* Slightly wider for longer messages */
         }
         .message-box.error { 
-            background-color: #dc3545; /* Red */
+            background-color: #CC0000; 
             color: var(--theme-white);
         }
-        .message-box.success { 
-             background-color: var(--theme-yellow);
-             color: var(--theme-black);
+        .message-box.info { /* Using warning yellow for info messages */
+             background-color: var(--theme-warning-yellow);
+             color: var(--theme-black); /* Black text on yellow for better contrast */
         }
         .message-box.show {
             opacity: 1;
@@ -123,14 +125,48 @@
             background-color: #374151;
             border-color: #4B5563;
             color: var(--theme-white);
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Smooth transition for flash */
         }
         .form-input-dark::placeholder {
             color: #9CA3AF;
         }
         .form-input-dark:focus {
-            --tw-ring-color: var(--theme-yellow);
+            --tw-ring-color: var(--theme-yellow); 
+            border-color: var(--theme-yellow);   
+        }
+        /* Custom checkbox style */
+        .form-checkbox-dark {
+            appearance: none;
+            background-color: #374151; /* Tailwind gray-700 */
+            border: 1px solid #4B5563; /* Tailwind gray-600 */
+            border-radius: 0.25rem; /* rounded */
+            width: 1.25rem; /* w-5 */
+            height: 1.25rem; /* h-5 */
+            display: inline-block;
+            vertical-align: middle;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .form-checkbox-dark:checked {
+            background-color: var(--theme-yellow);
             border-color: var(--theme-yellow);
         }
+        .form-checkbox-dark:checked::after {
+            content: '✔'; /* Checkmark character */
+            font-size: 0.875rem; /* text-sm */
+            color: var(--theme-black);
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            line-height: 1;
+        }
+        .form-checkbox-dark:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--theme-black), 0 0 0 4px var(--theme-yellow); /* Focus ring */
+        }
+
 
         /* Select field styling for dark theme */
         .form-select-dark {
@@ -150,6 +186,23 @@
             width: 1px;
             height: 1px;
             overflow: hidden;
+        }
+        /* Style for character counter */
+        .char-counter {
+            font-size: 0.875rem; /* text-sm */
+            color: #9CA3AF; /* Tailwind gray-400 - default color */
+            text-align: right;
+            margin-top: 0.25rem; /* mt-1 */
+            transition: color 0.2s ease-in-out; /* Smooth transition for flash */
+        }
+        /* Style for flashing border/ring red */
+        .flash-border-red {
+            border-color: var(--theme-error-red) !important;
+            box-shadow: 0 0 0 2px var(--theme-error-red) !important; /* Simulates ring flash */
+        }
+        /* Style for flashing text red */
+        .flash-text-red {
+            color: var(--theme-error-red) !important;
         }
     </style>
 </head>
@@ -261,10 +314,23 @@
                            placeholder="john.doe@example.com">
                 </div>
                 <div class="mb-6">
+                    <label for="promotional_opt_in" class="flex items-center text-gray-400 text-sm">
+                        <input type="checkbox" id="promotional_opt_in" name="promotional_opt_in" value="yes"
+                               class="form-checkbox-dark mr-2">
+                        I agree to receive occasional promotional emails and updates.
+                    </label>
+                </div>
+                <div class="mb-6">
                     <label for="phone_quote" class="block text-gray-300 text-sm font-bold mb-2">Phone Number (Optional):</label>
                     <input type="tel" id="phone_quote" name="phone" 
                            class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 form-input-dark"
-                           placeholder="(123) 456-7890">
+                           placeholder="+1 (123) 456-7890">
+                </div>
+                <div class="mb-6">
+                    <label for="address_quote" class="block text-gray-300 text-sm font-bold mb-2">Project Address:</label> 
+                    <input type="text" id="address_quote" name="address" required 
+                           class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 form-input-dark"
+                           placeholder="123 Main St, City, State">
                 </div>
                 <div class="mb-6">
                     <label for="service_type" class="block text-gray-300 text-sm font-bold mb-2">Service Interested In:</label>
@@ -280,8 +346,12 @@
                 <div class="mb-6">
                     <label for="message_quote" class="block text-gray-300 text-sm font-bold mb-2">Project Details / Message:</label>
                     <textarea id="message_quote" name="message" rows="5" required 
+                              maxlength="1000" 
                               class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 form-input-dark"
                               placeholder="Please describe your project or inquiry (e.g., number of parking spaces, type of surface)."></textarea>
+                    <div class="char-counter">
+                        <span id="charCounter">0/1000</span>
+                    </div>
                 </div>
                 <div class="text-center">
                     <button type="submit"
@@ -298,7 +368,8 @@
             <h2 class="text-3xl md:text-4xl font-bold mb-12 text-theme-yellow">Contact Us Directly</h2>
             <p class="text-lg text-gray-300 mb-8"> Have questions or prefer to reach out by phone or email?
             </p>
-            <div class="flex flex-col md:flex-row justify-center items-center space-y-6 md:space-y-0 md:space-x-12 mb-8"> <div class="flex items-center text-lg text-gray-300 hover:text-theme-yellow transition duration-300">
+            <div class="flex flex-col md:flex-row justify-center items-center space-y-6 md:space-y-0 md:space-x-12 mb-8"> 
+                <div class="flex items-center text-lg text-gray-300 hover:text-theme-yellow transition duration-300">
                     <i class="fas fa-envelope mr-3 text-2xl text-theme-yellow"></i>
                     <a href="mailto:serge.zadorozhny@stripestoshines.com">serge.zadorozhny@stripestoshines.com</a>
                 </div>
@@ -307,10 +378,17 @@
                     <a href="tel:7203061147">720-306-1147</a>
                 </div>
             </div>
-            <div class="text-lg text-gray-300">
+            <div class="text-lg text-gray-300 mb-8">
                 <h3 class="font-semibold text-xl mb-2 text-theme-yellow">Business Hours:</h3>
                 <p>Monday - Saturday: 9:00 AM - 5:00 PM</p>
                 <p>Sunday: Closed</p>
+            </div>
+            <div>
+                 <a href="YOUR_GOOGLE_MY_BUSINESS_LINK_HERE" target="_blank" rel="noopener noreferrer"
+                   class="inline-flex items-center bg-theme-yellow text-theme-black font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-yellow-400 transition duration-300 text-md transform hover:scale-105">
+                    <i class="fab fa-google mr-2"></i>
+                    Review us on Google
+                </a>
             </div>
         </div>
     </section>
@@ -339,13 +417,18 @@
         const messageBox = document.getElementById('messageBox'); 
         const thankYouModal = document.getElementById('thankYouModal');
         const closeModalButton = document.getElementById('closeModalButton');
+        const phoneInput = document.getElementById('phone_quote'); 
+        const addressInput = document.getElementById('address_quote'); 
+        const messageTextarea = document.getElementById('message_quote'); 
+        const charCounterSpan = document.getElementById('charCounter'); 
+        let isFieldFlashing = {}; 
 
-        function showMessage(message, type = 'error') {
+        function showMessage(message, type = 'error') { 
             messageBox.textContent = message;
-            messageBox.className = `message-box ${type} show`;
+            messageBox.className = `message-box ${type} show`; 
             setTimeout(() => {
                 messageBox.classList.remove('show');
-            }, 4000);
+            }, 5000); 
         }
 
         function showThankYouModal() {
@@ -359,18 +442,176 @@
                 thankYouModal.classList.remove('show');
             }
         }
+        
+        function flashElement(element, textElement = null) {
+            const fieldId = element.id;
+            if (isFieldFlashing[fieldId]) return; 
+
+            isFieldFlashing[fieldId] = true;
+            element.classList.add('flash-border-red');
+            if (textElement) {
+                textElement.classList.add('flash-text-red');
+            }
+
+            setTimeout(() => {
+                element.classList.remove('flash-border-red');
+                if (textElement) {
+                    textElement.classList.remove('flash-text-red');
+                }
+                isFieldFlashing[fieldId] = false;
+            }, 700); 
+        }
+
+        function formatPhoneNumber(value) {
+            let rawDigits = value.replace(/[^\d]/g, ''); 
+
+            if (rawDigits.startsWith('1') && rawDigits.length > 0) { 
+                rawDigits = rawDigits.substring(1); 
+            }
+            
+            const tenDigits = rawDigits.substring(0, 10); 
+            const len = tenDigits.length;
+
+            if (len === 0) return ""; 
+
+            let formatted = "+1 ";
+            if (len <= 3) {
+                formatted += `(${tenDigits}`;
+            } else if (len <= 6) {
+                formatted += `(${tenDigits.slice(0, 3)}) ${tenDigits.slice(3)}`;
+            } else {
+                formatted += `(${tenDigits.slice(0, 3)}) ${tenDigits.slice(3, 6)}-${tenDigits.slice(6, 10)}`;
+            }
+            return formatted;
+        }
+
+        if (phoneInput) {
+            phoneInput.placeholder = "+1 (123) 456-7890";
+
+            phoneInput.addEventListener('input', (e) => {
+                const target = e.target;
+                let cursorPos = target.selectionStart;
+                const originalLength = target.value.length;
+
+                const formattedValue = formatPhoneNumber(target.value);
+                target.value = formattedValue;
+
+                const newLength = formattedValue.length;
+                if (newLength > originalLength) {
+                    cursorPos += (newLength - originalLength);
+                }
+                cursorPos = Math.min(cursorPos, newLength);
+            });
+
+            phoneInput.addEventListener('keydown', (e) => {
+                const target = e.target;
+                const key = e.key;
+                const isControlKey = key.length > 1 || e.ctrlKey || e.metaKey;
+                const selectionStart = target.selectionStart;
+
+                if ((key === 'Backspace' || key === 'Delete') && selectionStart <= 3 && target.value.startsWith("+1 ")) {
+                    if (target.value.substring(3).replace(/[^\d]/g, '').length === 0) { 
+                    } else {
+                        e.preventDefault(); 
+                        return;
+                    }
+                }
+
+                if (isControlKey) return;
+
+                let currentDigits = target.value.replace(/[^\d]/g, '');
+                if (currentDigits.startsWith('1')) { 
+                    currentDigits = currentDigits.substring(1);
+                }
+                
+                const isDigit = /^\d$/.test(key);
+
+                if (!isDigit) {
+                    flashElement(phoneInput);
+                    e.preventDefault();
+                } else if (currentDigits.length >= 10) {
+                    flashElement(phoneInput);
+                    e.preventDefault();
+                }
+            });
+
+            phoneInput.addEventListener('blur', (e) => {
+                const rawDigits = e.target.value.replace(/[^\d]/g, '');
+                if (rawDigits === "1" || rawDigits === "") { 
+                    e.target.value = ""; 
+                } else if (e.target.value.length > 0 && !e.target.value.startsWith('+1 ')) {
+                     e.target.value = formatPhoneNumber(e.target.value);
+                } else if (e.target.value.startsWith('+1 ') && e.target.value.replace(/[^\d]/g,'').substring(1).length === 0) {
+                    e.target.value = "";
+                }
+            });
+        }
+        
+        if (addressInput) {
+            addressInput.addEventListener('blur', function() {
+                const addressValue = this.value.trim();
+                if (addressValue === "") { 
+                    return;
+                }
+
+                const lowerAddress = addressValue.toLowerCase();
+                const isColorado = lowerAddress.includes('colorado') || 
+                                   lowerAddress.includes(', co') || 
+                                   /\bco\b/.test(lowerAddress);     
+
+                if (!isColorado) {
+                    showMessage("We primarily serve locations within Colorado. For out-of-state inquiries, please contact us to discuss possibilities.", "info");
+                }
+            });
+        }
+
+        if (messageTextarea && charCounterSpan) {
+            const maxLength = parseInt(messageTextarea.getAttribute('maxlength'));
+
+            const updateCharCounter = () => {
+                let currentLength = messageTextarea.value.length;
+                if (currentLength > maxLength) { 
+                    messageTextarea.value = messageTextarea.value.substring(0, maxLength);
+                    currentLength = maxLength;
+                }
+                charCounterSpan.textContent = `${currentLength}/${maxLength}`;
+                
+                if (currentLength < maxLength) {
+                    charCounterSpan.classList.remove('flash-text-red');
+                    messageTextarea.classList.remove('flash-border-red'); 
+                }
+            };
+            
+            if (maxLength) {
+                charCounterSpan.textContent = `${messageTextarea.value.length}/${maxLength}`;
+            }
+
+            messageTextarea.addEventListener('input', updateCharCounter);
+
+            messageTextarea.addEventListener('keydown', (e) => {
+                const currentLength = messageTextarea.value.length;
+                const isControlKey = e.key.length > 1 || e.ctrlKey || e.metaKey; 
+                
+                if (currentLength >= maxLength && !isControlKey) {
+                    if (e.key.length === 1) { 
+                        flashElement(messageTextarea, charCounterSpan);
+                    }
+                }
+            });
+        }
+
 
         if (quoteForm) {
             quoteForm.addEventListener('submit', function(event) {
-                event.preventDefault(); // Prevent default HTML form submission to handle it with AJAX
+                event.preventDefault(); 
 
                 const nameInput = document.getElementById('name');
                 const emailInput = document.getElementById('email_quote');
                 const serviceInput = document.getElementById('service_type');
-                const messageInput = document.getElementById('message_quote');
-
-                if (!nameInput.value || !emailInput.value || !serviceInput.value || !messageInput.value) {
-                    showMessage('Please fill in all required fields.', 'error');
+                const currentAddressInput = document.getElementById('address_quote'); 
+                
+                if (!nameInput.value || !emailInput.value || !currentAddressInput.value || !serviceInput.value || !messageTextarea.value) {
+                    showMessage('Please fill in all required fields, including Project Address.', 'error');
                     return;
                 }
 
@@ -379,10 +620,9 @@
                 submitButton.disabled = true;
                 submitButton.textContent = 'Sending...';
 
-                // For Netlify AJAX submission, we need to send data as x-www-form-urlencoded
                 const body = new URLSearchParams(formData).toString();
 
-                fetch("/", { // Netlify forms are typically submitted to the root path or the page path
+                fetch("/", { 
                     method: "POST",
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     body: body
@@ -390,9 +630,18 @@
                 .then(response => {
                     if (response.ok) {
                         quoteForm.reset();
+                        if (messageTextarea && charCounterSpan) {
+                             const maxLengthAttr = messageTextarea.getAttribute('maxlength');
+                             if (maxLengthAttr) {
+                                charCounterSpan.textContent = `0/${maxLengthAttr}`;
+                                charCounterSpan.classList.remove('flash-text-red'); 
+                                messageTextarea.classList.remove('flash-border-red'); 
+                             }
+                        }
+                        if(phoneInput) phoneInput.value = ""; 
+
                         showThankYouModal();
                     } else {
-                        // Handle server errors from Netlify if any (though usually it's a success or nothing)
                         response.text().then(text => {
                              showMessage('Oops! There was a problem submitting your form. Please try again. ' + text, 'error');
                         });
@@ -442,6 +691,14 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            if (messageTextarea && charCounterSpan) {
+                const maxLengthAttr = messageTextarea.getAttribute('maxlength');
+                if (maxLengthAttr) {
+                    const maxLength = parseInt(maxLengthAttr);
+                    charCounterSpan.textContent = `${messageTextarea.value.length}/${maxLength}`;
+                }
+            }
+
             const logoImg = document.querySelector('img[alt="Stripes to Shines Logo"]');
             if (logoImg) {
                  logoImg.onerror = function() {
