@@ -225,6 +225,7 @@
                         <a href="#services" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Services</a>
                         <a href="#quote" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Request Quote</a>
                         <a href="#contact" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Contact</a>
+                        <a href="#ask-question" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Ask a Question</a>
                     </div>
                 </div>
                 <div class="-mr-2 flex md:hidden">
@@ -246,6 +247,7 @@
                 <a href="#services" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Services</a>
                 <a href="#quote" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Request Quote</a>
                 <a href="#contact" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Contact</a>
+                <a href="#ask-question" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Ask a Question</a>
             </div>
         </div>
     </nav>
@@ -393,6 +395,52 @@
         </div>
     </section>
 
+    <section id="ask-question" class="py-16 md:py-24 bg-theme-black fade-in-section">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-theme-yellow">Have a Question?</h2>
+            <form id="questionForm" 
+                  name="question-submission" method="POST" 
+                  data-netlify="true" 
+                  data-netlify-honeypot="bot-field-question" 
+                  class="max-w-xl mx-auto bg-theme-dark-gray p-8 rounded-lg shadow-xl">
+                
+                <input type="hidden" name="form-name" value="question-submission" />
+                <p class="netlify-honeypot-field">
+                    <label>Don’t fill this out if you’re human: <input name="bot-field-question" /></label>
+                </p>
+                
+                <div class="mb-6">
+                    <label for="question_name" class="block text-gray-300 text-sm font-bold mb-2">Full Name:</label>
+                    <input type="text" id="question_name" name="name" required
+                           class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 form-input-dark"
+                           placeholder="John Doe">
+                </div>
+                <div class="mb-6">
+                    <label for="question_email" class="block text-gray-300 text-sm font-bold mb-2">Email Address:</label>
+                    <input type="email" id="question_email" name="email" required 
+                           class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 form-input-dark"
+                           placeholder="john.doe@example.com">
+                </div>
+                <div class="mb-6">
+                    <label for="question_message" class="block text-gray-300 text-sm font-bold mb-2">Your Question:</label>
+                    <textarea id="question_message" name="question" rows="5" required 
+                              maxlength="500" class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 form-input-dark"
+                              placeholder="Ask us anything..."></textarea>
+                    <div class="char-counter">
+                        <span id="questionCharCounter">0/500</span>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <button type="submit"
+                            class="bg-theme-yellow hover:bg-yellow-400 text-theme-black font-bold py-3 px-8 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-opacity-50 transition duration-300 transform hover:scale-105">
+                        Send Question
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+
     <footer class="bg-black text-white py-10 text-center">
         <img class="h-16 w-auto mx-auto mb-4" src="IMG_0075.PNG" alt="Stripes to Shines Logo Small" onerror="this.style.display='none';">
         <p class="text-lg font-semibold text-theme-yellow">STRIPES TO SHINES</p>
@@ -405,7 +453,7 @@
     <div id="thankYouModal" class="modal-overlay">
         <div class="modal-content">
             <h2 class="text-3xl font-bold text-theme-yellow mb-4">Thank You!</h2>
-            <p class="text-lg mb-6">Your quote request has been successfully submitted. We'll get back to you as soon as possible.</p>
+            <p class="text-lg mb-6">Your message has been successfully sent. We'll get back to you as soon as possible.</p>
             <button id="closeModalButton" class="modal-close-button">Close</button>
         </div>
     </div>
@@ -414,6 +462,7 @@
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
         const quoteForm = document.getElementById('quoteForm');
+        const questionForm = document.getElementById('questionForm'); // New form
         const messageBox = document.getElementById('messageBox'); 
         const thankYouModal = document.getElementById('thankYouModal');
         const closeModalButton = document.getElementById('closeModalButton');
@@ -421,6 +470,8 @@
         const addressInput = document.getElementById('address_quote'); 
         const messageTextarea = document.getElementById('message_quote'); 
         const charCounterSpan = document.getElementById('charCounter'); 
+        const questionTextarea = document.getElementById('question_message'); // New textarea
+        const questionCharCounterSpan = document.getElementById('questionCharCounter'); // New counter
         let isFieldFlashing = {}; 
 
         function showMessage(message, type = 'error') { 
@@ -565,98 +616,123 @@
             });
         }
 
-        if (messageTextarea && charCounterSpan) {
-            const maxLength = parseInt(messageTextarea.getAttribute('maxlength'));
+        // Generic character counter and flashing function for textareas
+        function initializeTextareaCounter(textareaElement, counterElement) {
+            if (textareaElement && counterElement) {
+                const maxLength = parseInt(textareaElement.getAttribute('maxlength'));
 
-            const updateCharCounter = () => {
-                let currentLength = messageTextarea.value.length;
-                if (currentLength > maxLength) { 
-                    messageTextarea.value = messageTextarea.value.substring(0, maxLength);
-                    currentLength = maxLength;
-                }
-                charCounterSpan.textContent = `${currentLength}/${maxLength}`;
-                
-                if (currentLength < maxLength) {
-                    charCounterSpan.classList.remove('flash-text-red');
-                    messageTextarea.classList.remove('flash-border-red'); 
-                }
-            };
-            
-            if (maxLength) {
-                charCounterSpan.textContent = `${messageTextarea.value.length}/${maxLength}`;
-            }
-
-            messageTextarea.addEventListener('input', updateCharCounter);
-
-            messageTextarea.addEventListener('keydown', (e) => {
-                const currentLength = messageTextarea.value.length;
-                const isControlKey = e.key.length > 1 || e.ctrlKey || e.metaKey; 
-                
-                if (currentLength >= maxLength && !isControlKey) {
-                    if (e.key.length === 1) { 
-                        flashElement(messageTextarea, charCounterSpan);
+                const updateCounter = () => {
+                    let currentLength = textareaElement.value.length;
+                    if (currentLength > maxLength) { 
+                        textareaElement.value = textareaElement.value.substring(0, maxLength);
+                        currentLength = maxLength;
                     }
-                }
-            });
-        }
-
-
-        if (quoteForm) {
-            quoteForm.addEventListener('submit', function(event) {
-                event.preventDefault(); 
-
-                const nameInput = document.getElementById('name');
-                const emailInput = document.getElementById('email_quote');
-                const serviceInput = document.getElementById('service_type');
-                const currentAddressInput = document.getElementById('address_quote'); 
+                    counterElement.textContent = `${currentLength}/${maxLength}`;
+                    
+                    if (currentLength < maxLength) {
+                        counterElement.classList.remove('flash-text-red');
+                        textareaElement.classList.remove('flash-border-red'); 
+                    }
+                };
                 
-                if (!nameInput.value || !emailInput.value || !currentAddressInput.value || !serviceInput.value || !messageTextarea.value) {
-                    showMessage('Please fill in all required fields, including Project Address.', 'error');
-                    return;
+                if (maxLength) {
+                    counterElement.textContent = `${textareaElement.value.length}/${maxLength}`;
                 }
 
-                const formData = new FormData(quoteForm);
-                const submitButton = quoteForm.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-                submitButton.textContent = 'Sending...';
+                textareaElement.addEventListener('input', updateCounter);
 
-                const body = new URLSearchParams(formData).toString();
-
-                fetch("/", { 
-                    method: "POST",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: body
-                })
-                .then(response => {
-                    if (response.ok) {
-                        quoteForm.reset();
-                        if (messageTextarea && charCounterSpan) {
-                             const maxLengthAttr = messageTextarea.getAttribute('maxlength');
-                             if (maxLengthAttr) {
-                                charCounterSpan.textContent = `0/${maxLengthAttr}`;
-                                charCounterSpan.classList.remove('flash-text-red'); 
-                                messageTextarea.classList.remove('flash-border-red'); 
-                             }
+                textareaElement.addEventListener('keydown', (e) => {
+                    const currentLength = textareaElement.value.length;
+                    const isControlKey = e.key.length > 1 || e.ctrlKey || e.metaKey; 
+                    
+                    if (currentLength >= maxLength && !isControlKey) {
+                        if (e.key.length === 1) { 
+                            flashElement(textareaElement, counterElement);
                         }
-                        if(phoneInput) phoneInput.value = ""; 
-
-                        showThankYouModal();
-                    } else {
-                        response.text().then(text => {
-                             showMessage('Oops! There was a problem submitting your form. Please try again. ' + text, 'error');
-                        });
                     }
-                })
-                .catch(error => {
-                    console.error('Form submission error:', error);
-                    showMessage('An unexpected error occurred. Please try again later.', 'error');
-                })
-                .finally(() => {
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Send Quote Request';
                 });
-            });
+                // Return a function to reset the counter, useful on form reset
+                return () => {
+                    if (maxLength) {
+                        counterElement.textContent = `0/${maxLength}`;
+                        counterElement.classList.remove('flash-text-red');
+                        textareaElement.classList.remove('flash-border-red');
+                    }
+                };
+            }
+            return () => {}; // Return a no-op function if elements are not found
         }
+
+        const resetQuoteMessageCounter = initializeTextareaCounter(messageTextarea, charCounterSpan);
+        const resetQuestionMessageCounter = initializeTextareaCounter(questionTextarea, questionCharCounterSpan);
+
+
+        // Form submission logic for a generic form
+        function handleFormSubmit(formElement, requiredFieldsCheck) {
+            if (formElement) {
+                formElement.addEventListener('submit', function(event) {
+                    event.preventDefault(); 
+
+                    if (requiredFieldsCheck && !requiredFieldsCheck()) {
+                        showMessage('Please fill in all required fields.', 'error');
+                        return;
+                    }
+
+                    const formData = new FormData(formElement);
+                    const submitButton = formElement.querySelector('button[type="submit"]');
+                    const originalButtonText = submitButton.textContent;
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Sending...';
+
+                    const body = new URLSearchParams(formData).toString();
+
+                    fetch("/", { 
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: body
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            formElement.reset();
+                            // Reset counters if applicable
+                            if (formElement.id === 'quoteForm') resetQuoteMessageCounter();
+                            if (formElement.id === 'questionForm') resetQuestionMessageCounter();
+                            if(phoneInput && formElement.id === 'quoteForm') phoneInput.value = ""; 
+                            showThankYouModal();
+                        } else {
+                            response.text().then(text => {
+                                 showMessage('Oops! There was a problem submitting your form. Please try again. ' + text, 'error');
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Form submission error:', error);
+                        showMessage('An unexpected error occurred. Please try again later.', 'error');
+                    })
+                    .finally(() => {
+                        submitButton.disabled = false;
+                        submitButton.textContent = originalButtonText;
+                    });
+                });
+            }
+        }
+
+        // Setup Quote Form
+        handleFormSubmit(quoteForm, () => {
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email_quote');
+            const serviceInput = document.getElementById('service_type');
+            const currentAddressInput = document.getElementById('address_quote');
+            return nameInput.value && emailInput.value && currentAddressInput.value && serviceInput.value && messageTextarea.value;
+        });
+
+        // Setup Question Form
+        handleFormSubmit(questionForm, () => {
+            const questionNameInput = document.getElementById('question_name');
+            const questionEmailInput = document.getElementById('question_email');
+            return questionNameInput.value && questionEmailInput.value && questionTextarea.value;
+        });
+
 
         if (closeModalButton) {
             closeModalButton.addEventListener('click', hideThankYouModal);
@@ -691,13 +767,16 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Initialize counters on page load
             if (messageTextarea && charCounterSpan) {
                 const maxLengthAttr = messageTextarea.getAttribute('maxlength');
-                if (maxLengthAttr) {
-                    const maxLength = parseInt(maxLengthAttr);
-                    charCounterSpan.textContent = `${messageTextarea.value.length}/${maxLength}`;
-                }
+                if (maxLengthAttr) charCounterSpan.textContent = `${messageTextarea.value.length}/${maxLengthAttr}`;
             }
+            if (questionTextarea && questionCharCounterSpan) {
+                const maxLengthAttr = questionTextarea.getAttribute('maxlength');
+                if (maxLengthAttr) questionCharCounterSpan.textContent = `${questionTextarea.value.length}/${maxLengthAttr}`;
+            }
+
 
             const logoImg = document.querySelector('img[alt="Stripes to Shines Logo"]');
             if (logoImg) {
